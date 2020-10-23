@@ -18,6 +18,7 @@ class LiveListBloc implements BlocBase {
   DataModel dataModel = DataModel();
 
   fetchListData(BuildContext context, String text) async {
+
     this.apiService.getData(text).then((response) {
       try {
         if (response.statusCode == 200) {

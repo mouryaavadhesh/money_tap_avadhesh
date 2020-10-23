@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_web_browser/flutter_web_browser.dart';
+import 'package:money_tap_avadhesh/api_service.dart';
 import 'package:money_tap_avadhesh/data.dart';
 import 'package:money_tap_avadhesh/list_bloc.dart';
 
@@ -17,11 +18,13 @@ class _LiveMarketState extends State<LiveMarket> {
   List<Data> listData = List<Data>();
   LiveListBloc liveListBloc = new LiveListBloc();
   TextEditingController editingController = TextEditingController();
+  ApiService apiService = ApiService();
 
   @override
   void initState() {
+
     super.initState();
-    liveListBloc.fetchListData(context, 'A');
+    liveListBloc.loadCard=3;
   }
 
   @override
@@ -32,6 +35,7 @@ class _LiveMarketState extends State<LiveMarket> {
 
   @override
   Widget build(BuildContext context) {
+    double width = MediaQuery.of(context).size.width;
     return Scaffold(
       backgroundColor: Colors.white,
       resizeToAvoidBottomInset: true,
@@ -52,38 +56,109 @@ class _LiveMarketState extends State<LiveMarket> {
           ),
         ),
       ),
-      body: StreamBuilder(
-        stream: liveListBloc.allList,
-        builder: (BuildContext context, AsyncSnapshot<DataModel> snapshot) {
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  onChanged: (value) {
-                    liveListBloc.loadCard = 0;
-                    if (value.length == 0) {
+      body: apiService.connectionStatus == true
+          ? StreamBuilder(
+              stream: liveListBloc.allList,
+              builder:
+                  (BuildContext context, AsyncSnapshot<DataModel> snapshot) {
+                return Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: TextField(
+                        onChanged: (value) {
+                          liveListBloc.loadCard = 0;
+                          if (value.length == 0) {
+                            liveListBloc.fetchListData(context, 'A');
+                          } else {
+                            liveListBloc.fetchListData(
+                                context, editingController.text);
+                          }
+                        },
+                        controller: editingController,
+                        decoration: InputDecoration(
+                            labelText: "Search",
+                            hintText: "Search",
+                            prefixIcon: Icon(Icons.search),
+                            border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(25.0)))),
+                      ),
+                    ),
+                    Expanded(child: getLoadList(snapshot)),
+                  ],
+                );
+              },
+            )
+          : Column(
+              children: [
+                Container(
+                  child: Column(
+                    children: [
+                      Container(
+                        height: 200,
+                        color: Colors.white,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius:
+                                BorderRadius.all(Radius.circular(20))),
+                        child: Text(
+                          'Oops! Something went wrong!',
+                          style: TextStyle(
+                              fontSize: 14,
+                              letterSpacing: 0,
+                              color: Colors.blue),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(5),
+                        child: Text(
+                          'Aw snap!Looks like system are slow \nat this time or something may be wrong\nwith your internet connection.Please try\nagain later 😞',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 14,
+                              letterSpacing: 0,
+                              color: Colors.blue),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(
+                  height: 50,
+                ),
+                InkWell(
+                  onTap: () {
+                    if (apiService.connectionStatus == true) {
                       liveListBloc.fetchListData(context, 'A');
-                    } else {
-                      liveListBloc.fetchListData(
-                          context, editingController.text);
                     }
                   },
-                  controller: editingController,
-                  decoration: InputDecoration(
-                      labelText: "Search",
-                      hintText: "Search",
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.all(Radius.circular(25.0)))),
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 20, right: 20),
+                    width: width - 40,
+                    height: 50,
+                    padding: const EdgeInsets.all(5),
+                    decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.all(Radius.circular(5))),
+                    child: Center(
+                      child: Text(
+                        'Try again',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 14, letterSpacing: 0, color: Colors.blue),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-              Expanded(child: getLoadList(snapshot)),
-            ],
-          );
-        },
-      ),
+              ],
+            ),
     );
   }
 
